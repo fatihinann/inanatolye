@@ -1,0 +1,5 @@
+# Node.js modülleri
+node_modules/
+.env
+package-lock.json
+.DS_Store
