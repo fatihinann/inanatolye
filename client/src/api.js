@@ -1,24 +1,23 @@
-import axios from "axios";
+// Frontend kodunda yapılması gereken güvenlik iyileştirmeleri:
 
-const api = axios.create({
-  baseURL: "http://localhost:3001",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+// 1. API URL'lerini .env dosyasında saklayın
+// Örnek: .env dosyasına REACT_APP_API_URL=https://your-api.com ekleyin
 
-// Request interceptor - her istekte token ekleme
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+// 2. Hassas bilgileri localStorage yerine HttpOnly cookie'lerde saklayın
+// localStorage kullanımı yerine:
+document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure; httpOnly";
+
+// 3. API isteklerinde CSRF koruması ekleyin
+// Her API isteğine X-CSRF-TOKEN header'ı ekleyin
+
+// 4. Tüm API çağrılarında hata yönetimini iyileştirin
+try {
+  const response = await fetch('/api/resource');
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
-);
-
-export default api;
+  const data = await response.json();
+} catch (error) {
+  console.error('API request failed:', error);
+  // Kullanıcıya anlamlı hata mesajı gösterin
+}
