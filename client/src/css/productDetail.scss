@@ -1,0 +1,123 @@
+.product-detail {
+  .product {
+    display: flex;
+    .image {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-width: 400px;
+      min-width: 250px;
+      max-height: min-content;
+      img {
+        width: 100%;
+        vertical-align: bottom;
+        overflow: hidden;
+      }
+    }
+    .content {
+      padding: 1rem;
+      .product-content {
+        p {
+          margin: 0.75rem 0;
+          font-size: 0.95rem;
+        }
+      }
+      .count {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        input {
+          width: 42px;
+          user-select: none;
+          height: 2rem;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-size: 14px;
+          color: #4a4a4a;
+          box-sizing: border-box;
+          border: none;
+          border-top: solid 1px #e6e6e6;
+          border-bottom: solid 1px #e6e6e6;
+          background-color: #ffffff;
+          outline: none;
+          text-align: center;
+        }
+      }
+    }
+  }
+  .features {
+    margin-block: 2rem;
+    padding: 1em;
+    border: 1px solid #aaa;
+    border-radius: 0.5rem;
+    -webkit-border-radius: 0.5rem;
+    -moz-border-radius: 0.5rem;
+    -ms-border-radius: 0.5rem;
+    -o-border-radius: 0.5rem;
+    h4{
+      font-weight: 400;
+    }
+    p{
+      margin-block: 1rem;
+    }
+    ul {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      background: #fafafa;
+      li {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem;
+        width: calc(50% - 2rem);
+        background: #dfdfdf;
+        border-radius: 0.5rem;
+        -webkit-border-radius: 0.5rem;
+        -moz-border-radius: 0.5rem;
+        -ms-border-radius: 0.5rem;
+        -o-border-radius: 0.5rem;
+}
+    }
+  }
+}
+@media screen and (max-width: 768px) {
+  .product {
+    justify-content: flex-start;
+    .image {
+      margin: 0 auto;
+      max-width: 300px;
+    }
+    .content {
+      flex: 1;
+      padding: 0;
+      p {
+        margin: 6px 0;
+        font-size: 0.95rem;
+      }
+    }
+  }
+}
+@media screen and (max-width: 515px) {
+  .product {
+    flex-direction: column;
+    .image {
+      margin: 0 auto;
+      max-width: 300px;
+    }
+    .content {
+      padding: 0;
+      p {
+        margin: 6px 0;
+      }
+    }
+  }
+  .features{
+    ul{
+      li{
+        flex-direction: column;
+      }
+    }
+  }
+}

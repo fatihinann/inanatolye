@@ -1,0 +1,113 @@
+$secondary: #edd0c0;
+$primary: #947869;
+
+.search-result {
+  margin: 1rem 0;
+  display: flex;
+  gap: 0.25rem;
+  span {
+    font-weight: 700;
+    display: inline;
+    font-size: 1rem;
+  }
+  b {
+    font-size: 1rem;
+  }
+}
+.home {
+  display: flex;
+}
+.about-us {
+  div{
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap:1rem;
+    div {
+      max-width: 600px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(0rem, -0.2rem + 1vw, 1rem);
+      padding: clamp(0rem, -0.2rem + 1vw, 1rem);
+      background: #f0e9e5;
+      div {
+        display: block;
+        padding: 0;
+        h3 {
+          font-weight: 600;
+          font-size: clamp(1.125rem, 1.05rem + 0.375vw, 1.345rem);
+        }
+        p {
+          font-size: clamp(0.85rem, 0.73rem + 0.225vw, 1rem);
+          line-height: clamp(0.9rem, 0.83rem + 0.35vw, 1.25rem);
+          color: #222;
+        }
+      }
+    }
+  }
+  .image {
+    align-self: start;
+    min-width: 120px;
+    img {
+      width: 100%;
+      height: 150px;
+      display: block;
+      object-fit: cover;
+    }
+  }
+}
+.vision-mission {
+  display: flex;
+  gap: 2rem;
+  div{
+    padding: 1rem;
+    background: #f0e9e5;
+    div{
+      padding: 0;
+    }
+    p{color: #222;}
+    h3{
+      font-weight: bold;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+  }
+}
+
+@media (max-width: 515px) {
+  .vision-mission {
+    flex-direction: column;
+  }
+  .about-us {
+    .flex {
+      margin-bottom: 1.5rem;
+      section {
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        span {
+          font-weight: 600;
+          font-size: clamp(1.125rem, 1.05rem + 0.375vw, 1.345rem);
+        }
+        p {
+          font-size: clamp(0.85rem, 0.73rem + 0.225vw, 1rem);
+          line-height: clamp(0.9rem, 0.83rem + 0.35vw, 1.25rem);
+          color: #222;
+        }
+      }
+    }
+    .image {
+      align-self: start;
+      min-width: 150px;
+      img {
+        width: 100%;
+        height: 220px;
+        display: block;
+        object-fit: cover;
+      }
+    }
+  }
+}

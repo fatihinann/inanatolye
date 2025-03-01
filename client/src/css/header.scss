@@ -1,0 +1,127 @@
+$secondary: #edd0c0;
+$primary: #947869;
+
+header {
+  margin: auto;
+  max-width: 1920px;
+  .header-container {
+    margin: auto;
+    padding: 0.5rem 1.5rem;
+    box-sizing: border-box;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .logo {
+      cursor: pointer;
+    }
+    .menu {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      .input-container {
+        border: 1px solid #d0d0d0;
+        display: flex;
+        align-items: center;
+        input {
+          height: 40px;
+          width: 100%;
+          border: none;
+          outline: none;
+          color: #111;
+        }
+        .search-icon {
+          padding: 0 1rem;
+          background-color: #fff;
+          color: #222;
+          height: 40px;
+          display: flex;
+          align-items: center;
+        }
+      }
+      .icons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 1.25rem;
+        // user.scss
+        .user {
+          position: relative;
+          cursor: pointer;
+
+          ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            padding: 10px 0;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+
+            li {
+              padding: 8px 15px;
+              color: #333;
+              font-size: 14px;
+              list-style: none;
+
+              &:hover {
+                background: #f5f5f5;
+              }
+            }
+          }
+
+          &:hover ul {
+            display: block;
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        span {
+          border-radius: 50px;
+          padding: 0.25rem 0.5rem;
+          display: flex;
+
+          .css-1whbi7s-MuiBadge-badge {
+            background-color: $primary;
+          }
+        }
+        svg:hover {
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  header {
+    .menu {
+      gap: 0.5rem;
+    }
+  }
+}
+@media screen and (max-width: 515px) {
+  header {
+    .header-container {
+      padding: 0.5rem 0.5rem;
+    }
+    .menu {
+      gap: 0.5rem;
+    }
+  }
+}

@@ -1,0 +1,58 @@
+footer {
+  text-align: center;
+  position: relative;
+  background: #222;
+  padding: 2rem 0;
+  max-width: 1920px;
+  margin: auto;
+  color: #fff;
+  h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .section {
+    margin: auto;
+    max-width: 800px;
+    display: flex;
+    justify-content: space-around;
+
+    svg {
+      font-size: 2rem;
+    }
+    .mail {
+      justify-content: center;
+      display: flex;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+    }
+    .socials {
+      display: flex;
+      gap: 1.75rem;
+    }
+  }
+}
+@media screen and (max-width: 515px) {
+  footer {
+    text-align: center;
+    span {
+      font-size: 1.5rem;
+    }
+    .section {
+      margin: 1rem auto;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      gap: 1rem;
+      svg {
+        font-size: 1.75rem;
+      }
+      .mail {
+        font-size: 1.115rem;
+      }
+      .socials {
+        justify-content: center;
+      }
+    }
+  }
+}
