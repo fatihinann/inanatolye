@@ -1,5 +1,5 @@
 const express = require("express");
-const basketController = require("../controllers/basketController");
+const { basketController } = require("../controllers/basketController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 
 const router = express.Router();

@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -8,14 +7,12 @@ const authRoutes = require("./routes/authRoutes");
 const basketRoutes = require("./routes/basketRoutes");
 const productRoutes = require("./routes/productRoutes");
 
-const express = require("express");
 const helmet = require("helmet"); // Yüklemeniz gerekir: npm install helmet
 const rateLimit = require("express-rate-limit"); // Yüklemeniz gerekir: npm install express-rate-limit
 const mongoSanitize = require("express-mongo-sanitize"); // Yüklemeniz gerekir: npm install express-mongo-sanitize
 const xss = require("xss-clean"); // Yüklemeniz gerekir: npm install xss-clean
 const hpp = require("hpp"); // Yüklemeniz gerekir: npm install hpp
-const cors = require("cors");
-const dotenv = require("dotenv");
+const dotenv = require("dotenv").config();
 const app = express();
 
 dotenv.config();

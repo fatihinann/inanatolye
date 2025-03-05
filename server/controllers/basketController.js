@@ -1,7 +1,7 @@
 const UserModel = require("../models/user");
 
 // Sepeti Getir
-exports.getBasket = async (req, res) => {
+const getBasket = async (req, res) => {
   try {
     const user = await UserModel.findById(req.user.id).select("basket");
     res.json(user.basket);
@@ -11,7 +11,7 @@ exports.getBasket = async (req, res) => {
 };
 
 // Sepete Ürün Ekle
-exports.addToBasket = async (req, res) => {
+const addToBasket = async (req, res) => {
   try {
     const user = await UserModel.findById(req.user.id);
     const existingItem = user.basket.find(
@@ -32,7 +32,7 @@ exports.addToBasket = async (req, res) => {
 };
 
 // Sepetten Ürün Sil
-exports.removeFromBasket = async (req, res) => {
+const removeFromBasket = async (req, res) => {
   try {
     const user = await UserModel.findById(req.user.id);
     user.basket = user.basket.filter(
@@ -47,7 +47,7 @@ exports.removeFromBasket = async (req, res) => {
 };
 
 // Misafir Sepetini Birleştir
-exports.mergeGuestCart = async (req, res) => {
+const mergeGuestCart = async (req, res) => {
   try {
     const user = await UserModel.findById(req.user.id);
     const guestItems = req.body.items || [];
@@ -79,7 +79,7 @@ exports.mergeGuestCart = async (req, res) => {
 };
 
 // Giriş yapıldığında kaydedilmiş sepeti geri yükle
-exports.restoreSavedCart = async (req, res) => {
+const restoreSavedCart = async (req, res) => {
   try {
     const user = await UserModel.findById(req.user.id);
     const savedCart = req.body.savedCart || [];
@@ -94,4 +94,11 @@ exports.restoreSavedCart = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Sunucu hatası", error: err.message });
   }
+};
+module.exports = {
+  getBasket,
+  addToBasket,
+  removeFromBasket,
+  mergeGuestCart,
+  restoreSavedCart,
 };
