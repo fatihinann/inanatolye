@@ -19,7 +19,7 @@ function Header() {
   const navigate = useNavigate();
   const { products } = useSelector((store) => store.basket);
   const query = useSelector((state) => state.product.query);
-  const isAuthenticated  = useSelector((state) => state.user);
+  const isAuthenticated = useSelector((state) => state.user);
   const dispatch = useDispatch();
   useEffect(() => {
     setIsUserMenuOpen(false);
@@ -83,6 +83,7 @@ function Header() {
                 </ul>
               ) : (
                 <ul>
+                  <li>{'giriş yapan kullanıcı ismi'}</li>
                   <li>Siparişlerim</li>
                   <li>Kullanıcı Bilgilerim</li>
                   <li>Değerlendirmelerim</li>

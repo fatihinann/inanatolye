@@ -15,7 +15,7 @@ const hpp = require("hpp"); // Yüklemeniz gerekir: npm install hpp
 const dotenv = require("dotenv").config();
 const app = express();
 
-dotenv.config();
+require("dotenv").config();
 
 // CORS güvenliği - beyaz liste yaklaşımı
 const whitelist = ["http://localhost:3000", "https://yourdomain.com"];
@@ -59,9 +59,10 @@ app.use(express.json());
 app.use(cors());
 
 // MongoDB bağlantısı
-mongoose.connect(
-  "mongodb+srv://fatihinan3437:SFPdqeS27kUsEOtc@inan.9useu.mongodb.net/?retryWrites=true&w=majority&appName=inan"
-);
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((err) => console.log("MongoDB connection failed:", err));
 
 // Ana rota
 app.get("/", (req, res) => {
@@ -74,7 +75,7 @@ app.use("/products", productRoutes);
 app.use("/api/basket", basketRoutes);
 
 // Server başlat
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server ${PORT} portunda çalışıyor`);
 });

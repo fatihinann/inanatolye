@@ -7,7 +7,7 @@ const initialState = {
   query: "",
   error: null,
 };
-const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:3001/products";
+const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:5000/products";
 
 export const getAllProducts = createAsyncThunk(
   "getAllProducts",

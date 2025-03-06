@@ -27,7 +27,7 @@ function ProductList() {
   return (
     <>
       {loading && <p>Yükleniyor...</p>}
-      {error && <p className="error">{error}</p>} {/* Hata mesajı */}
+      {error && <p className="error">{error}</p>}
       {query && (
         <div className="search-result">
           <span>{query}</span> ile ilgili <b>{filteredProducts.length}</b> ürün

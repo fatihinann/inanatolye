@@ -81,7 +81,7 @@ function Product({ product }) {
   };
 
   return (
-    <div className="product" onClick={() => navigate(`/product/${_id}`)}>
+    <div className="product" onClick={() => navigate(`${_id}`)}>
       <div className="image">
         <img src={image} alt={title} />
       </div>

@@ -1,41 +1,32 @@
+// routes/basketRoutes.js
 const express = require("express");
-const { basketController } = require("../controllers/basketController");
+const router = express.Router();
+const {
+  getBasket,
+  addToBasket,
+  updateBasketQuantity,
+  removeFromBasket,
+  clearBasket,
+  mergeGuestCart,
+} = require("../controllers/basketController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 
-const router = express.Router();
+// Get current user's basket
+router.get("/", authenticateToken, getBasket);
 
-router.get("/", authenticateToken, basketController.getBasket);
-router.post("/merge", authenticateToken, basketController.mergeGuestCart);
-router.post("/restore", authenticateToken, basketController.restoreSavedCart);
-router.post("/", authenticateToken, async (req, res) => {
-  try {
-    const user = await UserModel.findById(req.user.id);
+// Add product to basket
+router.post("/add", authenticateToken, addToBasket);
 
-    req.body.products.forEach((newProduct) => {
-      const existing = user.basket.find((p) =>
-        p.productId.equals(newProduct.productId)
-      );
+// Update product quantity in basket
+router.put("/update", authenticateToken, updateBasketQuantity);
 
-      if (existing) {
-        existing.count = Math.min(
-          newProduct.count,
-          getMaxQuantityFromDB(newProduct.productId)
-        );
-      } else {
-        user.basket.push(validateProduct(newProduct));
-      }
-    });
+// Remove product from basket
+router.delete("/:productId", authenticateToken, removeFromBasket);
 
-    await user.save();
-    res.json(user.basket);
-  } catch (err) {
-    handleError(res, err);
-  }
-});
-router.delete(
-  "/:productId",
-  authenticateToken,
-  basketController.removeFromBasket
-);
+// Clear entire basket
+router.delete("/", authenticateToken, clearBasket);
+
+// Merge guest cart with user cart
+router.post("/merge", authenticateToken, mergeGuestCart);
 
 module.exports = router;
