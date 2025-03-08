@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginWithBasketSync } from "../redux/slices/userSlice";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
 
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
@@ -16,8 +16,17 @@ const Login = () => {
     password: "",
   });
   const [message, setMessage] = useState("");
-
+  
+  // Get authentication status and error from Redux
+  const isAuthenticated = useSelector(state => state.users.isAuthenticated);
   const errorMessage = useSelector(state => state.users.error);
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,30 +36,31 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
-
+    
     try {
       if (isLogin) {
-        // Login işlemi
-        await dispatch(loginWithBasketSync({ email: formData.email, password: formData.password }));
-        navigate("/");
+        // Login with API and sync basket
+        await dispatch(loginWithBasketSync({ 
+          email: formData.email, 
+          password: formData.password 
+        }));
+        // Navigation will happen in useEffect after authentication state updates
       } else {
-        // Kayıt işlemi
+        // Register with API
         const response = await axios.post(
           "http://localhost:5000/auth/register",
-          {
-            ...formData,
-          }
+          formData
         );
+        
         setMessage("Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
         setIsLogin(true);
         console.log("Kayıt başarılı:", response.data);
       }
     } catch (err) {
-      if (err.response) {
-        setMessage(err.response.data.message || "İşlem başarısız!");
-      } else {
-        setMessage("Sunucu bağlantı hatası!");
-      }
+      const errorMsg = err.response?.data?.message || 
+                       err.message || 
+                       "İşlem başarısız!";
+      setMessage(errorMsg);
       console.error("Hata:", err);
     }
   };
@@ -58,10 +68,10 @@ const Login = () => {
   return (
     <div className="login-register-page">
       <h1>{isLogin ? "Giriş Yap" : "Kayıt Ol"}</h1>
-
+      
       {message && <div className="message">{message}</div>}
-      {errorMessage && <div className="message">{errorMessage}</div>}
-
+      {errorMessage && <div className="message error">{errorMessage}</div>}
+      
       <form onSubmit={handleSubmit}>
         {!isLogin && (
           <>
@@ -100,7 +110,7 @@ const Login = () => {
           required
         />
         <button type="submit">{isLogin ? "Giriş Yap" : "Kayıt Ol"}</button>
-      </form>
+      </form> 
       <p>
         {isLogin ? "Hesabınız yok mu? " : "Zaten hesabınız var mı? "}
         <button onClick={() => setIsLogin(!isLogin)}>

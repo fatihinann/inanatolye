@@ -11,6 +11,7 @@ import { clearBasket, setDrawerClose } from "../redux/slices/basketSlice";
 import { setSearchQuery } from "../redux/slices/productSlice";
 import "../css/header.scss";
 import "../css/user.scss";
+import { logoutUser } from "../redux/slices/userSlice";
 // import { logoutWithBasketSave } from "../redux/slices/userSlice";
 
 function Header() {
@@ -19,17 +20,16 @@ function Header() {
   const navigate = useNavigate();
   const { products } = useSelector((store) => store.basket);
   const query = useSelector((state) => state.product.query);
-  const isAuthenticated = useSelector((state) => state.user);
+  const { currentUser, isAuthenticated } = useSelector((state) => state.users);
   const dispatch = useDispatch();
+  
   useEffect(() => {
     setIsUserMenuOpen(false);
   }, [isAuthenticated]);
 
   const handleLogout = () => {
-    // dispatch(logoutWithBasketSave());
+    dispatch(logoutUser()); // Use the correct action from userSlice
     dispatch(clearBasket());
-    localStorage.removeItem("user");
-    localStorage.removeItem("basket");
     navigate("/");
   };
 
@@ -81,16 +81,20 @@ function Header() {
                   <li onClick={() => navigate("/login")}>Giriş Yap</li>
                   <li onClick={() => navigate("/register")}>Kayıt Ol</li>
                 </ul>
-              ) : (
+              ) : isUserMenuOpen && isAuthenticated ? (
                 <ul>
-                  <li>{'giriş yapan kullanıcı ismi'}</li>
-                  <li>Siparişlerim</li>
-                  <li>Kullanıcı Bilgilerim</li>
-                  <li>Değerlendirmelerim</li>
-                  <li>Beğendiklerim</li>
+                  <li>{currentUser?.name || "Kullanıcı"}</li>
+                  <li onClick={() => navigate("/orders")}>Siparişlerim</li>
+                  <li onClick={() => navigate("/profile")}>
+                    Kullanıcı Bilgilerim
+                  </li>
+                  <li onClick={() => navigate("/reviews")}>
+                    Değerlendirmelerim
+                  </li>
+                  <li onClick={() => navigate("/favorites")}>Beğendiklerim</li>
                   <li onClick={handleLogout}>Çıkış Yap</li>
                 </ul>
-              )}
+              ) : null}
             </span>
             <Badge color="info" badgeContent={products.length} showZero>
               <FaCartShopping

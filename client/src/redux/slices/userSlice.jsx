@@ -1,17 +1,25 @@
+// 1. First, update your userSlice.js to handle and store JWT tokens
 import { createSlice } from "@reduxjs/toolkit";
 import { logout, loginAndSyncBasket } from "./basketSlice";
+import axios from "axios";
 
-// LocalStorage'dan mevcut kullanıcıyı alma
-const getCurrentUserFromStorage = () => {
+// Get user data and token from localStorage
+const getUserFromStorage = () => {
   const user = localStorage.getItem("currentUser");
   return user ? JSON.parse(user) : null;
 };
 
+const getTokenFromStorage = () => {
+  return localStorage.getItem("token") || null;
+};
+
 const initialState = {
   users: localStorage.getItem("users") ? JSON.parse(localStorage.getItem("users")) : [],
-  currentUser: getCurrentUserFromStorage(),
-  isAuthenticated: !!getCurrentUserFromStorage(),
-  error: null, // 'message' yerine 'error' kullan
+  currentUser: getUserFromStorage(),
+  token: getTokenFromStorage(),  // Add token to state
+  refreshToken: localStorage.getItem("refreshToken") || null,  // Store refresh token too
+  isAuthenticated: !!getUserFromStorage() && !!getTokenFromStorage(),
+  error: null,
 };
 
 const usersSlice = createSlice({
@@ -21,7 +29,7 @@ const usersSlice = createSlice({
     registerUser: (state, action) => {
       const newUser = {
         ...action.payload,
-        id: Date.now().toString() // Unique ID ekleme
+        id: Date.now().toString()
       };
       
       const emailExists = state.users.some(user => user.email === newUser.email);
@@ -36,99 +44,85 @@ const usersSlice = createSlice({
       const user = state.users.find(u => u.email === email && u.password === password);
     
       if (!user) {
-        state.error = "Geçersiz kimlik bilgileri!"; // Redux'ta 'message' yerine 'error' kullan
+        state.error = "Geçersiz kimlik bilgileri!";
         return;
       }
     
       state.currentUser = user;
       state.isAuthenticated = true;
-      state.error = null; // Giriş başarılıysa hatayı temizle
+      state.error = null;
       localStorage.setItem("currentUser", JSON.stringify(user));
     },
+    
+    // Add a new action to set token after API login
+    setAuthTokens: (state, action) => {
+      const { token, refreshToken } = action.payload;
+      state.token = token;
+      state.refreshToken = refreshToken;
+      state.isAuthenticated = true;
+      
+      // Store tokens in localStorage
+      localStorage.setItem("token", token);
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
+    },
+    
     logoutUser: (state) => {
       state.currentUser = null;
       state.isAuthenticated = false;
+      state.token = null;
+      state.refreshToken = null;
+      
+      // Clear storage
       localStorage.removeItem("currentUser");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
     },
     
     loginSuccess: (state, action) => {
-      state.currentUser = action.payload;
+      state.currentUser = action.payload.user;
+      state.token = action.payload.token;
+      state.refreshToken = action.payload.refreshToken;
       state.isAuthenticated = true;
     },
     
-    logoutSuccess: (state) => {
-      state.currentUser = null;
-      state.isAuthenticated = false;
-    },
-    
-    updateUser: (state, action) => {
-      const updatedUser = action.payload;
-      const index = state.users.findIndex(u => u.id === updatedUser.id);
-      
-      if(index === -1) throw new Error("Kullanıcı bulunamadı!");
-      
-      // Güncelleme işlemleri
-      state.users[index] = updatedUser;
-      localStorage.setItem("users", JSON.stringify(state.users));
-
-      // Eğer güncellenen kullanıcı mevcut kullanıcıysa
-      if(state.currentUser?.id === updatedUser.id) {
-        state.currentUser = updatedUser;
-        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-      }
-    },
-    
-    deleteUser: (state, action) => {
-      const userId = action.payload;
-      state.users = state.users.filter(u => u.id !== userId);
-      localStorage.setItem("users", JSON.stringify(state.users));
-
-      // Eğer silinen kullanıcı mevcut kullanıcıysa
-      if(state.currentUser?.id === userId) {
-        state.currentUser = null;
-        state.isAuthenticated = false;
-        localStorage.removeItem("currentUser");
-      }
-    }
+    // Other reducers remain the same...
   }
 });
 
-// Thunk Actions
-export const loginWithBasketSync = (credentials) => async (dispatch, getState) => {
+// Updated Thunk to use API for authentication
+export const loginWithBasketSync = (credentials) => async (dispatch) => {
   try {
-    console.log("Giriş bilgileri:", credentials); // Gelen bilgileri kontrol et
-    console.log("Mevcut kullanıcılar:", getState().users.users); // Kullanıcı listesini kontrol et
+    // First, authenticate with the backend API
+    const response = await axios.post(
+      "http://localhost:5000/auth/login",
+      credentials
+    );
     
-    // Login işlemini başlat
-    await dispatch(loginUser(credentials));
-    
-    // Güncellenmiş state'i al
-    const currentState = getState();
-    console.log("Login sonrası state:", currentState.users);
-    
-    if (currentState.users.error) {
-      console.log("Login hatası:", currentState.users.error);
-      return Promise.reject(currentState.users.error);
+    // Check if the API response contains token and user data
+    if (response.data && response.data.token) {
+      // Store the user and tokens in Redux
+      dispatch(loginSuccess({
+        user: response.data.user,
+        token: response.data.token,
+        refreshToken: response.data.refreshToken
+      }));
+      
+      // Sync the basket with the user ID and token
+      if (response.data.user && response.data.user._id) {
+        await dispatch(loginAndSyncBasket(response.data.user._id, response.data.token));
+      }
+      
+      return Promise.resolve();
+    } else {
+      return Promise.reject("Authentication failed: Invalid server response");
     }
-    
-    // Giriş başarılıysa, sepeti senkronize et
-    if (currentState.users.currentUser) {
-      await dispatch(loginAndSyncBasket(currentState.users.currentUser.id));
-    }
-    
-    return Promise.resolve();
   } catch (error) {
-    console.error("Login thunk hatası:", error);
-    return Promise.reject(error.message || "Bir hata oluştu");
+    const errorMessage = error.response?.data?.message || "Authentication failed";
+    dispatch({ type: "users/loginFailed", payload: errorMessage });
+    return Promise.reject(errorMessage);
   }
-};
-
-export const logoutWithBasketSave = () => async (dispatch) => {
-  // Önce sepet ile ilgili işlemleri yap
-  await dispatch(logout());
-  
-  // Sonra kullanıcı çıkışını yap
-  dispatch(logoutUser());
 };
 
 export const {
@@ -138,7 +132,7 @@ export const {
   updateUser,
   deleteUser,
   loginSuccess,
-  logoutSuccess
+  setAuthTokens
 } = usersSlice.actions;
 
 export default usersSlice.reducer;
