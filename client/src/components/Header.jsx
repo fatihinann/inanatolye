@@ -11,7 +11,7 @@ import { clearBasket, setDrawerClose } from "../redux/slices/basketSlice";
 import { setSearchQuery } from "../redux/slices/productSlice";
 import "../css/header.scss";
 import "../css/user.scss";
-import { logoutWithBasketSave } from "../redux/slices/userSlice";
+// import { logoutWithBasketSave } from "../redux/slices/userSlice";
 
 function Header() {
   const [theme, setTheme] = useState(false);
@@ -26,7 +26,7 @@ function Header() {
   }, [isAuthenticated]);
 
   const handleLogout = () => {
-    dispatch(logoutWithBasketSave());
+    // dispatch(logoutWithBasketSave());
     dispatch(clearBasket());
     localStorage.removeItem("user");
     localStorage.removeItem("basket");

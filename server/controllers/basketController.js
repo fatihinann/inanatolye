@@ -6,12 +6,12 @@ const asyncHandler = require("express-async-handler");
 const getBasket = asyncHandler(async (req, res) => {
   // Use req.user.id instead of req.params.userId if you're using the authenticated user's ID
   const user = await User.findById(req.user.id);
-  
+
   if (!user) {
     res.status(404);
     throw new Error("Kullanıcı bulunamadı");
   }
-  
+
   res.json(user.basket);
 });
 
@@ -128,9 +128,9 @@ const mergeGuestCart = asyncHandler(async (req, res) => {
   }
 
   const guestItems = req.body.items || [];
-  
+
   // İşlemler...
-  
+
   await user.save();
   res.status(200).json(user.basket);
 });
