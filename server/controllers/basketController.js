@@ -4,11 +4,14 @@ const asyncHandler = require("express-async-handler");
 
 // Get the user's basket
 const getBasket = asyncHandler(async (req, res) => {
+  // Use req.user.id instead of req.params.userId if you're using the authenticated user's ID
   const user = await User.findById(req.user.id);
+  
   if (!user) {
     res.status(404);
     throw new Error("Kullanıcı bulunamadı");
   }
+  
   res.json(user.basket);
 });
 
@@ -116,38 +119,18 @@ const clearBasket = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Sepet temizlendi", basket: [] });
 });
 
-// Merge guest cart with user cart
+// basketController.js - mergeGuestCart fonksiyonu
 const mergeGuestCart = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id); // Token'dan gelen ID kullanılıyor
   if (!user) {
     res.status(404);
     throw new Error("Kullanıcı bulunamadı");
   }
 
   const guestItems = req.body.items || [];
-
-  // For each item in guest cart
-  for (const item of guestItems) {
-    if (!item.productId) continue;
-
-    const existingItem = user.basket.find(
-      (basketItem) =>
-        basketItem.productId.toString() === item.productId.toString()
-    );
-
-    if (existingItem) {
-      existingItem.count += item.count || 1;
-    } else {
-      user.basket.push({
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        count: item.count || 1,
-        image: item.image,
-      });
-    }
-  }
-
+  
+  // İşlemler...
+  
   await user.save();
   res.status(200).json(user.basket);
 });

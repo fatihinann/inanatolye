@@ -36,7 +36,7 @@ const Login = () => {
       } else {
         // Kayıt işlemi
         const response = await axios.post(
-          "http://localhost:3001/auth/register",
+          "http://localhost:5000/auth/register",
           {
             ...formData,
           }

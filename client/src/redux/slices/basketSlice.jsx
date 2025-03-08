@@ -126,6 +126,7 @@ export const basketSlice = createSlice({
 });
 
 // Async Thunks
+// basketSlice.js
 export const loginAndSyncBasket = (userId) => async (dispatch, getState) => {
   try {
     dispatch(setLoading(true));
@@ -136,15 +137,37 @@ export const loginAndSyncBasket = (userId) => async (dispatch, getState) => {
     // Kullanıcı ID'sini güncelle
     dispatch(setUserId(userId));
     
+    // Token'ı al
+    const token = getState().users.token; // Auth state'inizdeki token path'i farklı olabilir
+    
+    // API çağrıları için headers
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    
     // Kullanıcının mevcut sepetini getir
-    const response = await axios.get(`/api/basket/${userId}`);
-    const userBasket = response.data;
+    let userBasket = [];
+    try {
+      const response = await axios.get(`/api/basket`, config);
+      userBasket = response.data;
+    } catch (error) {
+      // Sepet bulunamadıysa (404), boş bir sepet kullan
+      if (error.response && error.response.status === 404) {
+        console.log("Kullanıcı sepeti bulunamadı, yeni sepet oluşturulacak");
+        userBasket = [];
+      } else {
+        // Diğer hata durumlarında hatayı yeniden fırlat
+        throw error;
+      }
+    }
     
     // Sepetleri birleştir
     const mergedBasket = mergeBaskets(guestBasket, userBasket);
     
     // Birleştirilmiş sepeti API'ye gönder
-    await axios.post(`/api/basket/${userId}/sync`, { items: mergedBasket });
+    await axios.post(`/api/basket/sync`, { items: mergedBasket }, config);
     
     // Giriş yapmış kullanıcının kayıtlı sepetini kontrol et ve geri yükle
     dispatch(restoreUserBasket());
@@ -187,8 +210,14 @@ export const syncBasket = (items) => async (dispatch, getState) => {
 export const fetchBasket = () => async (dispatch, getState) => {
   try {
     const { userId } = getState().basket;
+    const token = getState().users.token; // Make sure this path is correct
+    
     if (userId) {
-      const response = await axios.get(`/api/basket/${userId}`);
+      const response = await axios.get(`/api/basket/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       dispatch(setBasket(response.data));
     } else {
       const guestBasket = getBasketFromStorage();

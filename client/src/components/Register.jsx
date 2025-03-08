@@ -26,7 +26,7 @@ const Register = () => {
 
     try {
       // Kayıt işlemi
-      const response = await axios.post("http://localhost:3001/auth/register", { 
+      const response = await axios.post("http://localhost:5000/auth/register", { 
         ...formData 
       });
       console.log("Kayıt başarılı:", response.data);

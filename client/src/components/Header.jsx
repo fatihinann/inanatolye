@@ -26,10 +26,10 @@ function Header() {
   }, [isAuthenticated]);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("basket");
     dispatch(logoutWithBasketSave());
     dispatch(clearBasket());
+    localStorage.removeItem("user");
+    localStorage.removeItem("basket");
     navigate("/");
   };
 

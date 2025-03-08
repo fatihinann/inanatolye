@@ -9,10 +9,13 @@ const {
   clearBasket,
   mergeGuestCart,
 } = require("../controllers/basketController");
-const { authenticateToken } = require("../middlewares/authMiddleware");
+const { authenticateToken, admin } = require("../middlewares/authMiddleware");
 
 // Get current user's basket
 router.get("/", authenticateToken, getBasket);
+
+// Sync basket (for user login)
+router.post("/sync", authenticateToken, mergeGuestCart);
 
 // Add product to basket
 router.post("/add", authenticateToken, addToBasket);
@@ -25,8 +28,5 @@ router.delete("/:productId", authenticateToken, removeFromBasket);
 
 // Clear entire basket
 router.delete("/", authenticateToken, clearBasket);
-
-// Merge guest cart with user cart
-router.post("/merge", authenticateToken, mergeGuestCart);
 
 module.exports = router;
