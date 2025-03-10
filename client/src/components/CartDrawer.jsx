@@ -8,6 +8,8 @@ import {
   clearBasket,
   setDrawerClose,
   setDrawerOpen,
+  clearBasketAPI,
+  removeFromBasketAPI,
 } from "../redux/slices/basketSlice";
 
 function CartDrawer() {
@@ -23,7 +25,7 @@ function CartDrawer() {
     const isHomePage = location.pathname === "/";
     const isProductPage = pathSegments.length === 2 && pathSegments[1] !== "";
     const isBasketPage = location.pathname === "/cart";
-    
+
     if ((isHomePage || isProductPage) && products.length > 0 && !isBasketPage) {
       dispatch(calculateBasket());
       dispatch(setDrawerOpen());
@@ -58,8 +60,7 @@ function CartDrawer() {
         </button>
         <button
           onClick={() => {
-            dispatch(clearBasket());
-            dispatch(calculateBasket());
+            dispatch(clearBasketAPI());
           }}
         >
           Tümünü Sil
@@ -70,19 +71,24 @@ function CartDrawer() {
         {products &&
           products.map((product, index) => (
             <div key={`${product.productId}-${index}`} className="cart-item">
-              <div className="image" onClick={() => navigate("/" + product.productId)}>
+              <div
+                className="image"
+                onClick={() => navigate("/" + product.productId)}
+              >
                 <img src={product.image} alt={product.name} />
               </div>
               <div className="content">
                 <span className="cart-price">{product.price} TL</span>
                 <div>
-                  <span className="cart-quantity">Adet: {product.quantity}</span>
+                  <span className="cart-quantity">
+                    Adet: {product.quantity}
+                  </span>
                   <button
                     className="delete-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      dispatch(removeFromBasket(product.productId));
-                      dispatch(calculateBasket());
+                      dispatch(removeFromBasketAPI(product.productId));
+                      dispatch(calculateBasket())
                     }}
                   >
                     <FaTrashAlt />

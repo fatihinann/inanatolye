@@ -20,7 +20,7 @@ function Header() {
   const navigate = useNavigate();
   const { products } = useSelector((store) => store.basket);
   const query = useSelector((state) => state.product.query);
-  const { currentUser, isAuthenticated } = useSelector((state) => state.users);
+  const { user: currentUser, isAuthenticated } = useSelector((state) => state.users);
   const dispatch = useDispatch();
   
   useEffect(() => {

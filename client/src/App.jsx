@@ -36,7 +36,7 @@ function App() {
       dispatch(fetchBasket());
     }
   }, [dispatch]);
-
+  
   return (
     <div className="app">
       <Header />

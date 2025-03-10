@@ -4,11 +4,13 @@ const authController = require("../controllers/authController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 
 
+// In your auth routes
 router.get("/validate-token", authenticateToken, async (req, res) => {
   try {
-    // If auth middleware passes, token is valid, send user data
-    const user = await User.findById(req.user.id).select("-password");
-    res.json({ success: true, user });
+    const userData = { ...req.user.toObject() };
+    delete userData.password;
+    
+    res.json({ success: true, user: userData });
   } catch (error) {
     console.error("Token validation error:", error);
     res.status(401).json({ message: "Invalid token" });
