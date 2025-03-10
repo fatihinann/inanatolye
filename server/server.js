@@ -4,7 +4,7 @@ const cors = require("cors");
 
 // Route dosyalarını içe aktar
 const authRoutes = require("./routes/authRoutes");
-const basketRoutes = require("./routes/basketRoutes");
+const cartRoutes = require('./routes/cartRoutes');
 const productRoutes = require("./routes/productRoutes");
 
 const helmet = require("helmet"); // Yüklemeniz gerekir: npm install helmet
@@ -72,7 +72,7 @@ app.get("/", (req, res) => {
 // Route'ları kullan
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
-app.use("/api/basket", basketRoutes);
+app.use("/cart", cartRoutes);
 
 // Server başlat
 const PORT = process.env.PORT || 5000;

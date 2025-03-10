@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { FaTrashAlt } from "react-icons/fa";
-import { useNavigate, useLocation } from "react-router-dom"; // useLocation ekleyin
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   calculateBasket,
@@ -13,7 +13,7 @@ import {
 function CartDrawer() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation(); // Mevcut URL'yi al
+  const location = useLocation();
   const { products, totalAmount, isDrawerOpen } = useSelector(
     (store) => store.basket
   );
@@ -22,16 +22,16 @@ function CartDrawer() {
     const pathSegments = location.pathname.split("/");
     const isHomePage = location.pathname === "/";
     const isProductPage = pathSegments.length === 2 && pathSegments[1] !== "";
-    const isBasketPage = location.pathname === "/cart"; // Sepet sayfası kontrolü
-  
+    const isBasketPage = location.pathname === "/cart";
+    
     if ((isHomePage || isProductPage) && products.length > 0 && !isBasketPage) {
       dispatch(calculateBasket());
-      dispatch(setDrawerOpen()); // Drawer'ı aç
+      dispatch(setDrawerOpen());
     } else {
-      dispatch(setDrawerClose()); // Drawer'ı kapat
+      dispatch(setDrawerClose());
     }
   }, [location.pathname, products, dispatch]);
-  
+
   useEffect(() => {
     const appContent = document.querySelector(".app");
     if (appContent) {
@@ -69,19 +69,19 @@ function CartDrawer() {
       <div className="cart-items">
         {products &&
           products.map((product, index) => (
-            <div key={`${product.id}-${index}`} className="cart-item">
-              <div className="image" onClick={() => navigate("/" + product.id)}>
-                <img src={product.image} alt={product.title} />
+            <div key={`${product.productId}-${index}`} className="cart-item">
+              <div className="image" onClick={() => navigate("/" + product.productId)}>
+                <img src={product.image} alt={product.name} />
               </div>
               <div className="content">
                 <span className="cart-price">{product.price} TL</span>
                 <div>
-                  <span className="cart-count">Adet: {product.count}</span>
+                  <span className="cart-quantity">Adet: {product.quantity}</span>
                   <button
                     className="delete-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      dispatch(removeFromBasket({ id: product.id }));
+                      dispatch(removeFromBasket(product.productId));
                       dispatch(calculateBasket());
                     }}
                   >

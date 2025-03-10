@@ -1,138 +1,172 @@
-// 1. First, update your userSlice.js to handle and store JWT tokens
 import { createSlice } from "@reduxjs/toolkit";
-import { logout, loginAndSyncBasket } from "./basketSlice";
 import axios from "axios";
+import { setUserId, restoreUserBasket, loginAndSyncBasket as syncBasket } from "./basketSlice";
 
-// Get user data and token from localStorage
-const getUserFromStorage = () => {
-  const user = localStorage.getItem("currentUser");
-  return user ? JSON.parse(user) : null;
-};
-
-const getTokenFromStorage = () => {
-  return localStorage.getItem("token") || null;
-};
+const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:5000";
 
 const initialState = {
-  users: localStorage.getItem("users") ? JSON.parse(localStorage.getItem("users")) : [],
-  currentUser: getUserFromStorage(),
-  token: getTokenFromStorage(),  // Add token to state
-  refreshToken: localStorage.getItem("refreshToken") || null,  // Store refresh token too
-  isAuthenticated: !!getUserFromStorage() && !!getTokenFromStorage(),
+  user: null,
+  token: localStorage.getItem("token") || null,
+  isAuthenticated: !!localStorage.getItem("token"),
+  isLoading: false,
   error: null,
 };
 
-const usersSlice = createSlice({
+export const userSlice = createSlice({
   name: "users",
   initialState,
   reducers: {
-    registerUser: (state, action) => {
-      const newUser = {
-        ...action.payload,
-        id: Date.now().toString()
-      };
-      
-      const emailExists = state.users.some(user => user.email === newUser.email);
-      if(emailExists) throw new Error("Bu e-posta zaten kayıtlı!");
-
-      state.users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(state.users));
+    setUser: (state, action) => {
+      state.user = action.payload;
     },
-    
-    loginUser: (state, action) => {
-      const { email, password } = action.payload;
-      const user = state.users.find(u => u.email === email && u.password === password);
-    
-      if (!user) {
-        state.error = "Geçersiz kimlik bilgileri!";
-        return;
+    setToken: (state, action) => {
+      state.token = action.payload;
+      if (action.payload) {
+        localStorage.setItem("token", action.payload);
+        state.isAuthenticated = true;
+      } else {
+        localStorage.removeItem("token");
+        state.isAuthenticated = false;
       }
-    
-      state.currentUser = user;
-      state.isAuthenticated = true;
+    },
+    setLoading: (state, action) => {
+      state.isLoading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
+    clearError: (state) => {
       state.error = null;
-      localStorage.setItem("currentUser", JSON.stringify(user));
     },
-    
-    // Add a new action to set token after API login
-    setAuthTokens: (state, action) => {
-      const { token, refreshToken } = action.payload;
-      state.token = token;
-      state.refreshToken = refreshToken;
-      state.isAuthenticated = true;
-      
-      // Store tokens in localStorage
-      localStorage.setItem("token", token);
-      if (refreshToken) {
-        localStorage.setItem("refreshToken", refreshToken);
-      }
-    },
-    
-    logoutUser: (state) => {
-      state.currentUser = null;
-      state.isAuthenticated = false;
+    logout: (state) => {
+      state.user = null;
       state.token = null;
-      state.refreshToken = null;
-      
-      // Clear storage
-      localStorage.removeItem("currentUser");
+      state.isAuthenticated = false;
       localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
     },
-    
-    loginSuccess: (state, action) => {
-      state.currentUser = action.payload.user;
-      state.token = action.payload.token;
-      state.refreshToken = action.payload.refreshToken;
-      state.isAuthenticated = true;
-    },
-    
-    // Other reducers remain the same...
-  }
+  },
 });
 
-// Updated Thunk to use API for authentication
+// Login and sync basket
 export const loginWithBasketSync = (credentials) => async (dispatch) => {
   try {
-    // First, authenticate with the backend API
-    const response = await axios.post(
-      "http://localhost:5000/auth/login",
-      credentials
-    );
+    dispatch(setLoading(true));
+    dispatch(clearError());
+
+    const response = await axios.post(`${BASE_URL}/auth/login`, credentials);
     
-    // Check if the API response contains token and user data
-    if (response.data && response.data.token) {
-      // Store the user and tokens in Redux
-      dispatch(loginSuccess({
-        user: response.data.user,
-        token: response.data.token,
-        refreshToken: response.data.refreshToken
-      }));
-      
-      // Sync the basket with the user ID and token
-      if (response.data.user && response.data.user._id) {
-        await dispatch(loginAndSyncBasket(response.data.user._id, response.data.token));
-      }
-      
-      return Promise.resolve();
-    } else {
-      return Promise.reject("Authentication failed: Invalid server response");
+    const { user, token, refreshToken } = response.data;
+    
+    dispatch(setUser(user));
+    dispatch(setToken(token));
+    
+    // Store refresh token if needed
+    if (refreshToken) {
+      localStorage.setItem("refreshToken", refreshToken);
     }
+    
+    // Set user ID in basket state and sync the basket
+    if (user && user._id) {
+      // First set the user ID
+      dispatch(setUserId(user._id));
+      
+      // Then sync basket with updated API calls
+      await dispatch(syncBasket(user._id, token));
+      
+      // Then restore any previously saved basket if needed
+      dispatch(restoreUserBasket());
+    }
+    
+    dispatch(setLoading(false));
+    return response.data;
   } catch (error) {
-    const errorMessage = error.response?.data?.message || "Authentication failed";
-    dispatch({ type: "users/loginFailed", payload: errorMessage });
-    return Promise.reject(errorMessage);
+    const errorMsg = 
+      error.response?.data?.message || 
+      "Giriş işlemi başarısız oldu";
+    
+    dispatch(setError(errorMsg));
+    dispatch(setLoading(false));
+    throw error;
   }
 };
 
-export const {
-  registerUser,
-  loginUser,
-  logoutUser,
-  updateUser,
-  deleteUser,
-  loginSuccess,
-  setAuthTokens
-} = usersSlice.actions;
+// Add the logoutUser function (using the existing logout reducer)
+export const logoutUser = () => (dispatch) => {
+  try {
+    // Call the logout reducer
+    dispatch(logout());
+    // You can add any additional logout logic here if needed
+    return { success: true };
+  } catch (error) {
+    console.error("Logout error:", error);
+    dispatch(setError("Çıkış yaparken bir sorun oluştu"));
+    return { success: false, error };
+  }
+};
 
-export default usersSlice.reducer;
+// Add the registerUser function
+export const registerUser = (userData) => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+    dispatch(clearError());
+
+    const response = await axios.post(`${BASE_URL}/auth/register`, userData);
+    
+    dispatch(setLoading(false));
+    return response.data;
+  } catch (error) {
+    const errorMsg = 
+      error.response?.data?.message || 
+      "Kayıt işlemi başarısız oldu";
+    
+    dispatch(setError(errorMsg));
+    dispatch(setLoading(false));
+    throw error;
+  }
+};
+// Add this to userSlice.js
+export const validateToken = (token) => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+    
+    // Set up headers with the token
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    // Verify token with server
+    const response = await axios.get(`${BASE_URL}/auth/validate-token`, config);
+    
+    // If token is valid, set user data
+    if (response.data && response.data.user) {
+      dispatch(setUser(response.data.user));
+      dispatch(setToken(token)); // Ensure token is set in state
+      dispatch(setLoading(false));
+      return true;
+    } else {
+      // Token invalid
+      dispatch(logout());
+      dispatch(setLoading(false));
+      return false;
+    }
+  } catch (error) {
+    console.error("Token validation error:", error);
+    // If there's an error, the token is likely invalid
+    dispatch(logout());
+    dispatch(setLoading(false));
+    return false;
+  }
+};
+export const { 
+  setUser, 
+  setToken, 
+  setLoading, 
+  setError, 
+  clearError, 
+  logout 
+} = userSlice.actions;
+
+export default userSlice.reducer;

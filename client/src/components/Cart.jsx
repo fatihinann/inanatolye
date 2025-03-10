@@ -15,24 +15,25 @@ function Cart() {
   const dispatch = useDispatch();
   const { products, totalAmount } = useSelector((store) => store.basket);
 
-  const increment = (id, currentCount) => {
-    dispatch(updateProductCount({ id, count: currentCount + 1 }));
+  const increment = (productId, currentQuantity) => {
+    dispatch(updateProductCount({ productId, quantity: currentQuantity + 1 }));
     dispatch(calculateBasket());
   };
 
-  const decrement = (id, currentCount) => {
-    if (currentCount > 1) {
-      dispatch(updateProductCount({ id, count: currentCount - 1 }));
+  const decrement = (productId, currentQuantity) => {
+    if (currentQuantity > 1) {
+      dispatch(updateProductCount({ productId, quantity: currentQuantity - 1 }));
       dispatch(calculateBasket());
     }
   };
-  const handleChange = (id, value) => {
-    const newCount = parseInt(value, 10);
-
+  
+  const handleChange = (productId, value) => {
+    const newQuantity = parseInt(value, 10);
+    
     // Eğer girilen değer sayısal değilse veya 0'dan küçükse güncelleme yapma
-    if (isNaN(newCount) || newCount < 1) return;
-
-    dispatch(updateProductCount({ id, count: newCount }));
+    if (isNaN(newQuantity) || newQuantity < 1) return;
+    
+    dispatch(updateProductCount({ productId, quantity: newQuantity }));
     dispatch(calculateBasket());
   };
 
@@ -61,33 +62,39 @@ function Cart() {
               {products &&
                 products.map((product, index) => {
                   return (
-                    <div key={`${product.id}-${index}`} className="cart-item">
+                    <div
+                      key={`${product.productId}-${index}`}
+                      className="cart-item"
+                    >
                       <div className="image">
-                        <img src={product.image} alt={product.title} />
+                        <img src={product.image} alt={product.name} />
                       </div>
                       <div className="cart-item-info">
-                        <span className="cart-title">{product.title}</span>
+                        {console.log(product)}
+                        <span className="cart-title">{product.name}</span>
                         <span className="cart-price">{product.price} TL</span>
                       </div>
                       <div className="count">
                         <button
                           className="counter-btn"
                           onClick={() => {
-                            decrement(product.id, product.count);
+                            decrement(product.productId, product.quantity);
                           }}
                         >
                           <FaMinus />
                         </button>
                         <input
                           className="cart-count"
-                          value={product.count}
+                          value={product.quantity}
                           onChange={(e) =>
-                            handleChange(product.id, e.target.value)
+                            handleChange(product.productId, e.target.value)
                           }
                         />
                         <button
                           className="counter-btn"
-                          onClick={() => increment(product.id, product.count)}
+                          onClick={() =>
+                            increment(product.productId, product.quantity)
+                          }
                         >
                           <FaPlus />
                         </button>
@@ -95,7 +102,7 @@ function Cart() {
                       <button
                         className="delete-btn"
                         onClick={() => {
-                          dispatch(removeFromBasket({ id: product.id }));
+                          dispatch(removeFromBasket(product.productId));
                           dispatch(calculateBasket());
                         }}
                       >

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addToBasket,
   calculateBasket,
-  setDrawerClose,
   setDrawerOpen,
+  setDrawerClose,
+  addItemToBasketAPI,
 } from "../redux/slices/basketSlice";
 import { useNavigate } from "react-router-dom";
 import "../css/product.scss";
@@ -15,19 +17,9 @@ function Product({ product }) {
   const navigate = useNavigate();
   const { _id, price, image, title, stock, maxQuantity } = product;
   const dispatch = useDispatch();
-  const [isAdded, setIsAdded] = useState(false);
-  
-  // Sepetteki bu üründen kaç adet olduğunu bul
-  const basketItems = useSelector((state) => state.basket.products);
-  const basketItem = basketItems.find((item) => item.id === _id);
-  const currentQuantityInBasket = basketItem ? basketItem.count : 0;
-  
-  // Kullanıcı durumunu kontrol et
-  const isAuthenticated = useSelector((state) => state.users?.isAuthenticated ?? false);
-
-  // Stok ve maksimum adet kontrolü
-  const isOutOfStock = stock === 0;
-  const isMaxQuantityReached = currentQuantityInBasket >= maxQuantity;
+  const userId = useSelector((state) => state.users.currentUser?._id);
+  const token = useSelector((state) => state.users.token);
+  const [loading, setLoading] = useState(false);
 
   const addBasket = () => {
     if (isOutOfStock) {
@@ -41,23 +33,55 @@ function Product({ product }) {
       return;
     }
 
-    const payload = {
-      id: _id,
+    // Create basket item using correct property names for backend compatibility
+    const basketItem = {
+      productId: _id,  // Changed from 'id' to 'productId' to match backend
       price: Number(price),
       image,
-      title,
-      count: 1,
-      maxQuantity,
+      name: title,     // Changed from 'title' to 'name' to match backend
+      quantity: 1      // Changed from 'count' to 'quantity' to match backend
     };
 
-    dispatch(addToBasket(payload));
-    dispatch(calculateBasket());
-    handleAddToCart();
-    dispatch(setDrawerOpen());
-
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 3000);
+    if (userId && token) {
+      setLoading(true);
+      dispatch(addItemToBasketAPI(basketItem, token))  // Removed userId param as it's not used in the function
+        .then(() => {
+          handleAddToCart();
+          dispatch(setDrawerOpen());
+          setIsAdded(true);
+          setTimeout(() => setIsAdded(false), 3000);
+          setLoading(false);
+        })
+        .catch((error) => {
+          toast.error("Ürün sepete eklenirken bir hata oluştu");
+          setLoading(false);
+        });
+    } else {
+      // For guest users, add to local cart
+      dispatch(addToBasket(basketItem));
+      dispatch(calculateBasket());
+      handleAddToCart();
+      dispatch(setDrawerOpen());
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 3000);
+    }
   };
+
+  const [isAdded, setIsAdded] = useState(false);
+  
+  // Find how many of this product are in cart
+  const basketItems = useSelector((state) => state.basket.products);
+  const basketItem = basketItems.find((item) => item.productId === _id);  // Changed from 'id' to 'productId'
+  const currentQuantityInBasket = basketItem ? basketItem.quantity : 0;  // Changed from 'count' to 'quantity'
+
+  // Check user authentication status
+  const isAuthenticated = useSelector(
+    (state) => state.users?.isAuthenticated ?? false
+  );
+
+  // Stock and max quantity checks
+  const isOutOfStock = stock === 0;
+  const isMaxQuantityReached = currentQuantityInBasket >= maxQuantity;
 
   const handleAddToCart = () => {
     toast.success(
@@ -95,10 +119,12 @@ function Product({ product }) {
             e.stopPropagation();
             addBasket();
           }}
-          disabled={stock === 0}
+          disabled={stock === 0 || loading}
         >
           {stock === 0
             ? "Stokta Yok"
+            : loading
+            ? "Ekleniyor..."
             : isAdded
             ? "Sepete Eklendi"
             : "Sepete Ekle"}

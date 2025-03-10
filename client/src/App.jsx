@@ -1,3 +1,8 @@
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { fetchBasket, restoreUserBasket } from "./redux/slices/basketSlice";
+import { validateToken } from "./redux/slices/userSlice";
+
 import "./App.scss";
 import PageContainer from "./container/PageContainer";
 import Header from "./components/Header";
@@ -8,17 +13,29 @@ import "react-toastify/dist/ReactToastify.css";
 import "./css/cart.scss";
 import CartDrawer from "./components/CartDrawer";
 import Footer from "./components/Footer";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchBasket} from "./redux/slices/basketSlice";
 
 function App() {
   const dispatch = useDispatch();
-  const isAuthenticated = useSelector((state) => state.users?.isAuthenticated ?? false);
 
   useEffect(() => {
-    dispatch(fetchBasket());
-  }, [dispatch, isAuthenticated]);
+    // Check if user is logged in
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Validate token and get user
+      dispatch(validateToken(token)).then((isValid) => {
+        if (isValid) {
+          // Load the user's cart
+          dispatch(fetchBasket());
+        } else {
+          // Token is invalid, load guest basket
+          dispatch(restoreUserBasket());
+        }
+      });
+    } else {
+      // No token, load guest basket
+      dispatch(fetchBasket());
+    }
+  }, [dispatch]);
 
   return (
     <div className="app">

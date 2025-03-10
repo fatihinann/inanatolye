@@ -69,7 +69,6 @@ const Login = () => {
     <div className="login-register-page">
       <h1>{isLogin ? "Giriş Yap" : "Kayıt Ol"}</h1>
       
-      {message && <div className="message">{message}</div>}
       {errorMessage && <div className="message error">{errorMessage}</div>}
       
       <form onSubmit={handleSubmit}>

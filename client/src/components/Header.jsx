@@ -12,7 +12,7 @@ import { setSearchQuery } from "../redux/slices/productSlice";
 import "../css/header.scss";
 import "../css/user.scss";
 import { logoutUser } from "../redux/slices/userSlice";
-// import { logoutWithBasketSave } from "../redux/slices/userSlice";
+
 
 function Header() {
   const [theme, setTheme] = useState(false);
@@ -28,7 +28,7 @@ function Header() {
   }, [isAuthenticated]);
 
   const handleLogout = () => {
-    dispatch(logoutUser()); // Use the correct action from userSlice
+    dispatch(logoutUser()); // Now this will work with our new function
     dispatch(clearBasket());
     navigate("/");
   };

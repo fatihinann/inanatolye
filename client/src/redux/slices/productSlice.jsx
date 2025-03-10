@@ -13,10 +13,13 @@ export const getAllProducts = createAsyncThunk(
   "getAllProducts",
   async (_, { rejectWithValue }) => {
     try {
+      console.log("API'ye istek yapılıyor:", BASE_URL);
       const response = await axios.get(BASE_URL);
+      console.log("API yanıtı:", response.data);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data); // Hata mesajını döndür
+      console.error("API hatası:", error);
+      return rejectWithValue(error.response?.data || "Bir hata oluştu");
     }
   }
 );
