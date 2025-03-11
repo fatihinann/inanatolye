@@ -22,6 +22,7 @@ const initialState = {
   userId: null,
   isLoading: false,
   error: null,
+  basketLoaded: false,
 };
 
 // Save basket to storage with better error handling
@@ -122,6 +123,9 @@ export const basketSlice = createSlice({
 
       writeFromBasketToStorage(state.products);
     },
+    setBasketLoaded: (state, action) => {
+      state.basketLoaded = action.payload;
+    },
     clearBasket: (state) => {
       state.products = [];
       localStorage.removeItem("basket");
@@ -183,17 +187,8 @@ export const loginAndSyncBasket =
         }
       } catch (error) {
         // Handle 404 (no basket yet) or other errors
-        if (error.response && error.response.status === 404) {
-          console.log("Kullanıcı sepeti bulunamadı, yeni sepet oluşturulacak");
-          userBasket = [];
-        } else if (error.response && error.response.status === 401) {
-          dispatch(setError("Yetkilendirme hatası: Lütfen tekrar giriş yapın"));
-          dispatch(setLoading(false));
-          return;
-        } else {
-          console.error("Sepet getirme hatası:", error);
-          userBasket = [];
-        }
+        console.error("Error fetching user basket:", error);
+        userBasket = [];
       }
 
       // Only merge baskets if there's something in the guest basket
@@ -205,7 +200,7 @@ export const loginAndSyncBasket =
       // Only sync with server if there are changes to make
       if (guestBasket.length > 0) {
         try {
-          await axios.post(
+          const syncResponse = await axios.post(
             `${BASE_URL}/cart/sync`,
             {
               items: mergedBasket.map((item) => ({
@@ -215,16 +210,35 @@ export const loginAndSyncBasket =
             },
             config
           );
+
+          console.log("Sync response:", syncResponse.data);
+
+          // If sync was successful and returned updated basket
+          if (syncResponse.data && syncResponse.data.items) {
+            const updatedBasket = syncResponse.data.items.map((item) => ({
+              productId: item.productId._id || item.productId,
+              quantity: item.quantity,
+              name: item.productId.name || "",
+              price: item.productId.price || 0,
+              image: item.productId.image || "",
+            }));
+
+            dispatch(setBasket(updatedBasket));
+          } else {
+            dispatch(setBasket(mergedBasket));
+          }
         } catch (error) {
           console.error(
             "Sepet senkronizasyon hatası:",
             error.response?.data || error.message
           );
+          // Still use merged basket even if sync failed
+          dispatch(setBasket(mergedBasket));
         }
+      } else {
+        dispatch(setBasket(userBasket));
       }
 
-      // Update Redux store
-      dispatch(setBasket(mergedBasket));
       dispatch(calculateBasket());
 
       // Clear the guest basket after successful sync
@@ -297,12 +311,18 @@ export const addItemToBasketAPI =
     }
   };
 
-// Enhanced fetchBasket function
 export const fetchBasket = () => async (dispatch, getState) => {
   try {
     dispatch(setLoading(true));
     const token = getState().users.token;
     const isAuthenticated = getState().users.isAuthenticated;
+
+    // Bu flag ile sepeti sadece bir kez yükle
+    const basketLoaded = getState().basket.basketLoaded || false;
+    if (basketLoaded) {
+      dispatch(setLoading(false));
+      return; // Sepet zaten yüklendi, işlemi atla
+    }
 
     if (token && isAuthenticated) {
       const config = {
@@ -314,7 +334,7 @@ export const fetchBasket = () => async (dispatch, getState) => {
       try {
         const response = await axios.get(`${BASE_URL}/cart`, config);
 
-        // Format the cart items
+        // Sepet öğelerini biçimlendir
         let basketItems = [];
         if (
           response.data &&
@@ -330,42 +350,42 @@ export const fetchBasket = () => async (dispatch, getState) => {
           }));
         }
 
-        console.log("Fetched basket from server:", basketItems);
-        dispatch(setBasket(basketItems));
+        console.log("Sunucudan sepet çekildi:", basketItems);
+        dispatch(setBasket(basketItems)); // Sepeti ayarla (birleştirme, tamamen değiştir)
         dispatch(calculateBasket());
+
+        // Sepet yüklendiğini işaretle
+        dispatch({ type: "basket/setBasketLoaded", payload: true });
       } catch (error) {
-        // Handle case where cart doesn't exist or is empty
+        // 404 hatası - sepet bulunamadı
         if (error.response && error.response.status === 404) {
-          console.log("Empty server cart, clearing local cart");
+          console.log("Boş sunucu sepeti, yerel sepeti temizle");
           dispatch(setBasket([]));
           dispatch(calculateBasket());
-        } else if (error.response && error.response.status === 401) {
-          // Auth error, use guest basket
-          console.log("Auth error, using guest basket");
-          const guestBasket = getBasketFromStorage();
-          dispatch(setBasket(guestBasket));
-          dispatch(calculateBasket());
         } else {
-          console.error("Error fetching cart:", error);
+          // Diğer hatalar için misafir sepetini kullan
+          console.error("Sepet çekilirken hata:", error);
           const guestBasket = getBasketFromStorage();
           dispatch(setBasket(guestBasket));
           dispatch(calculateBasket());
         }
       }
     } else {
-      // No token or not authenticated, use guest basket
-      console.log("No token/auth, using guest basket");
+      // Token veya kimlik doğrulama yok, misafir sepetini kullan
+      console.log("Token/kimlik doğrulama yok, misafir sepetini kullan");
       const guestBasket = getBasketFromStorage();
       dispatch(setBasket(guestBasket));
       dispatch(calculateBasket());
     }
 
+    // Sepet yüklendiğini işaretle
+    dispatch({ type: "basket/setBasketLoaded", payload: true });
     dispatch(setLoading(false));
   } catch (err) {
-    console.error("General error fetching basket:", err);
+    console.error("Sepet çekilirken genel hata:", err);
     dispatch(setLoading(false));
 
-    // Fallback to guest basket
+    // Misafir sepetine geri dön
     const guestBasket = getBasketFromStorage();
     dispatch(setBasket(guestBasket));
     dispatch(calculateBasket());
@@ -403,8 +423,6 @@ export const saveBasketBeforeLogout = () => async (dispatch, getState) => {
       );
 
       console.log("Basket successfully synced before logout");
-      // After successful sync, can remove from localStorage
-      localStorage.removeItem("savedUserBasket");
     }
   } catch (err) {
     console.error("Sepet çıkış öncesi kaydedilirken hata:", err);
@@ -508,6 +526,7 @@ export const {
   setUserId,
   setLoading,
   setError,
+  setBasketLoaded,
 } = basketSlice.actions;
 
 export default basketSlice.reducer;

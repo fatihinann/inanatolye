@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { fetchBasket, restoreUserBasket } from "./redux/slices/basketSlice";
+import { fetchBasket, loginAndSyncBasket, restoreUserBasket } from "./redux/slices/basketSlice";
 import { validateToken } from "./redux/slices/userSlice";
 
 import "./App.scss";
@@ -18,21 +18,32 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Check if user is logged in
+    // Kullanıcının oturum açıp açmadığını kontrol et
     const token = localStorage.getItem("token");
+    
+    // Misafir sepetini sadece bir kez çek ve saklayın
+    const guestBasket = JSON.parse(localStorage.getItem("basket") || "[]");
+    let guestBasketProcessed = false;
+    
     if (token) {
-      // Validate token and get user
+      // Token'ı doğrula ve kullanıcıyı al
       dispatch(validateToken(token)).then((isValid) => {
         if (isValid) {
-          // Load the user's cart
-          dispatch(fetchBasket());
+          // Sadece misafir sepeti varsa ve işlenmemişse senkronize et
+          if (guestBasket.length > 0 && !guestBasketProcessed) {
+            dispatch(loginAndSyncBasket(token));
+            guestBasketProcessed = true;
+          } else {
+            // Aksi halde sadece kullanıcı sepetini yükle
+            dispatch(fetchBasket());
+          }
         } else {
-          // Token is invalid, load guest basket
+          // Token geçersiz, misafir sepetini yükle
           dispatch(restoreUserBasket());
         }
       });
     } else {
-      // No token, load guest basket
+      // Token yok, misafir sepetini yükle
       dispatch(fetchBasket());
     }
   }, [dispatch]);

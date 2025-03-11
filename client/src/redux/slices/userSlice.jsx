@@ -4,6 +4,7 @@ import {
   setUserId,
   restoreUserBasket,
   loginAndSyncBasket as syncBasket,
+  saveBasketBeforeLogout,
 } from "./basketSlice";
 
 const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:5000";
@@ -93,12 +94,13 @@ export const loginWithBasketSync = (credentials) => async (dispatch) => {
   }
 };
 
-// Add the logoutUser function (using the existing logout reducer)
-export const logoutUser = () => (dispatch) => {
+export const logoutUser = () => async (dispatch) => {
   try {
-    // Call the logout reducer
+    // First save the basket
+    await dispatch(saveBasketBeforeLogout());
+    
+    // Then logout
     dispatch(logout());
-    // You can add any additional logout logic here if needed
     return { success: true };
   } catch (error) {
     console.error("Logout error:", error);

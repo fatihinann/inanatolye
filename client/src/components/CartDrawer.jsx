@@ -4,21 +4,26 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   calculateBasket,
-  removeFromBasket,
-  clearBasket,
   setDrawerClose,
   setDrawerOpen,
   clearBasketAPI,
   removeFromBasketAPI,
+  fetchBasket,
 } from "../redux/slices/basketSlice";
 
 function CartDrawer() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { products, totalAmount, isDrawerOpen } = useSelector(
+  const { products, totalAmount, isDrawerOpen, isLoading } = useSelector(
     (store) => store.basket
   );
+  const { isAuthenticated } = useSelector((store) => store.users);
+
+  // Fetch basket when component mounts or auth state changes
+  useEffect(() => {
+    dispatch(fetchBasket());
+  }, [dispatch, isAuthenticated]);
 
   useEffect(() => {
     const pathSegments = location.pathname.split("/");
@@ -62,13 +67,16 @@ function CartDrawer() {
           onClick={() => {
             dispatch(clearBasketAPI());
           }}
+          disabled={isLoading}
         >
-          Tümünü Sil
+          {isLoading ? "İşleniyor..." : "Tümünü Sil"}
         </button>
         <p>Toplam: {netTutar} TL</p>
       </div>
       <div className="cart-items">
-        {products &&
+        {isLoading ? (
+          <div className="loading">Yükleniyor...</div>
+        ) : products && products.length > 0 ? (
           products.map((product, index) => (
             <div key={`${product.productId}-${index}`} className="cart-item">
               <div
@@ -88,15 +96,18 @@ function CartDrawer() {
                     onClick={(e) => {
                       e.stopPropagation();
                       dispatch(removeFromBasketAPI(product.productId));
-                      dispatch(calculateBasket())
                     }}
+                    disabled={isLoading}
                   >
                     <FaTrashAlt />
                   </button>
                 </div>
               </div>
             </div>
-          ))}
+          ))
+        ) : (
+          <div className="empty-cart">Sepetiniz boş</div>
+        )}
       </div>
     </div>
   );

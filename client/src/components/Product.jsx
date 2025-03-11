@@ -26,25 +26,25 @@ function Product({ product }) {
       toast.error("Ürün stokta bulunmamaktadır.");
       return;
     }
-
+  
     if (isMaxQuantityReached) {
       dispatch(setDrawerOpen());
       toast.error(`Bir kullanıcı en fazla ${maxQuantity} adet ekleyebilir.`);
       return;
     }
-
-    // Create basket item using correct property names for backend compatibility
+  
+    // Create basket item with consistent property names
     const basketItem = {
-      productId: _id,  // Changed from 'id' to 'productId' to match backend
+      productId: _id,
       price: Number(price),
       image,
-      name: title,     // Changed from 'title' to 'name' to match backend
-      quantity: 1      // Changed from 'count' to 'quantity' to match backend
+      name: title,
+      quantity: 1
     };
-
+  
     if (userId && token) {
       setLoading(true);
-      dispatch(addItemToBasketAPI(basketItem, token))  // Removed userId param as it's not used in the function
+      dispatch(addItemToBasketAPI(basketItem, token))
         .then(() => {
           handleAddToCart();
           dispatch(setDrawerOpen());

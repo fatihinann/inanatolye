@@ -22,24 +22,27 @@ function Cart() {
 
   const decrement = (productId, currentQuantity) => {
     if (currentQuantity > 1) {
-      dispatch(updateProductCount({ productId, quantity: currentQuantity - 1 }));
+      dispatch(
+        updateProductCount({ productId, quantity: currentQuantity - 1 })
+      );
       dispatch(calculateBasket());
     }
   };
-  
+
   const handleChange = (productId, value) => {
     const newQuantity = parseInt(value, 10);
-    
+
     // Eğer girilen değer sayısal değilse veya 0'dan küçükse güncelleme yapma
     if (isNaN(newQuantity) || newQuantity < 1) return;
-    
+
     dispatch(updateProductCount({ productId, quantity: newQuantity }));
     dispatch(calculateBasket());
   };
 
   useEffect(() => {
+    // Sadece toplam tutarı hesapla, başka bir şey yapma
     dispatch(calculateBasket());
-  }, [dispatch, products]);
+  }, [dispatch, products.length]); // Sadece ürün sayısı değiştiğinde tetikle
   const netTutar = Math.round(totalAmount * 100) / 100;
   return (
     <div className="cart-container">
