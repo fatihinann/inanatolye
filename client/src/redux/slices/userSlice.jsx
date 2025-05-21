@@ -62,6 +62,8 @@ export const loginWithBasketSync = (credentials) => async (dispatch) => {
 
     const { user, token, refreshToken } = response.data;
 
+    console.log("Login başarılı:", { user, hasToken: !!token });
+
     dispatch(setUser(user));
     dispatch(setToken(token));
 
@@ -70,16 +72,16 @@ export const loginWithBasketSync = (credentials) => async (dispatch) => {
       localStorage.setItem("refreshToken", refreshToken);
     }
 
-    // Set user ID in basket state and sync the basket
+    // Önce kaydedilmiş sepeti getir
+    dispatch(restoreUserBasket());
+
+    // Sonra user ID'yi ayarla ve sepeti senkronize et
     if (user && user._id) {
-      // First set the user ID
+      console.log("Sepet senkronizasyonu başlatılıyor, user ID:", user._id);
       dispatch(setUserId(user._id));
-
-      // Then sync basket with updated API calls
       await dispatch(syncBasket(user._id, token));
-
-      // Then restore any previously saved basket if needed
-      dispatch(restoreUserBasket());
+    } else {
+      console.error("User ID veya token bulunamadı:", { userId: user?._id, hasToken: !!token });
     }
 
     dispatch(setLoading(false));
@@ -147,9 +149,14 @@ export const validateToken = (token) => async (dispatch) => {
       dispatch(setUser(response.data.user));
       dispatch(setToken(token)); // Keep token in state
 
+      console.log("Token doğrulandı, kullanıcı:", response.data.user);
+
       // Set user ID in basket state if needed
       if (response.data.user._id) {
         dispatch(setUserId(response.data.user._id));
+        
+        // Sepeti senkronize et (token doğrulandıktan sonra)
+        dispatch(syncBasket(response.data.user._id, token));
       }
 
       dispatch(setLoading(false));

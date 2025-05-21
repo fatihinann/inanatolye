@@ -1,36 +1,30 @@
 import React, { useEffect } from "react";
-import { FaTrashAlt } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { FaTrashAlt } from "react-icons/fa";
 import {
   calculateBasket,
   setDrawerClose,
   setDrawerOpen,
   clearBasketAPI,
   removeFromBasketAPI,
-  fetchBasket,
 } from "../redux/slices/basketSlice";
 
 function CartDrawer() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { products, totalAmount, isDrawerOpen, isLoading } = useSelector(
+  const { products, totalAmount, isDrawerOpen, isLoading, basketLoaded } = useSelector(
     (store) => store.basket
   );
   const { isAuthenticated } = useSelector((store) => store.users);
-
-  // Fetch basket when component mounts or auth state changes
-  useEffect(() => {
-    dispatch(fetchBasket());
-  }, [dispatch, isAuthenticated]);
 
   useEffect(() => {
     const pathSegments = location.pathname.split("/");
     const isHomePage = location.pathname === "/";
     const isProductPage = pathSegments.length === 2 && pathSegments[1] !== "";
     const isBasketPage = location.pathname === "/cart";
-
+    
     if ((isHomePage || isProductPage) && products.length > 0 && !isBasketPage) {
       dispatch(calculateBasket());
       dispatch(setDrawerOpen());
@@ -38,7 +32,6 @@ function CartDrawer() {
       dispatch(setDrawerClose());
     }
   }, [location.pathname, products, dispatch]);
-
   useEffect(() => {
     const appContent = document.querySelector(".app");
     if (appContent) {

@@ -16,15 +16,6 @@ const UserSchema = new mongoose.Schema({
     adres: String,
     postalCode: String,
   },
-  basket: [
-    {
-      productId: mongoose.Schema.Types.ObjectId,
-      name: String,
-      price: Number,
-      count: Number,
-      image: String,
-    },
-  ],
 });
 
 const UserModel = mongoose.model("User", UserSchema);

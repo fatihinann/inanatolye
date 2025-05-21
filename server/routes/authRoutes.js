@@ -3,8 +3,6 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 
-
-// In your auth routes
 router.get("/validate-token", authenticateToken, async (req, res) => {
   try {
     const userData = { ...req.user.toObject() };
